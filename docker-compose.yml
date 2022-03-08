@@ -1,0 +1,106 @@
+version: '3'
+
+volumes:
+  wordpress-pgdata:
+  mysql:
+networks:
+  backend:
+
+services:
+  nginx:
+    image: nginx:stable
+    container_name: wordpress-nginx-container
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+      - postgres
+    networks:
+      - backend
+
+  mysql:
+        image: mariadb:10.6.1
+        container_name: wordpress-mysql-container
+        restart: unless-stopped
+        tty: true
+        volumes:
+          - ./mariadb:/var/lib/mysql
+        ports:
+          - "3306:3306"
+        env_file: .env
+        environment:
+          MARIADB_DATABASE: "${MARIADB_DATABASE}"
+          MARIADB_USER: "${MARIADB_USER}"
+          MARIADB_PASSWORD: "${MARIADB_PASSWORD}"
+          MARIADB_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
+          SERVICE_TAGS: "${SERVICE_TAGS}"
+          SERVICE_NAME: "${SERVICE_NAME}"
+        networks:
+          - backend
+
+  postgres:
+    image: postgres:13.3-alpine
+    container_name: wordpress-postgres-container
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 5440:5432
+    volumes:
+      - wordpress-pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: wordpress-service-db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456789
+      PGDATA: /var/lib/postgresql/data
+    networks:
+      - backend
+
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wordpress-php-container
+    restart: unless-stopped
+    volumes:
+      - ./src:/var/www/html
+    networks:
+      - backend
+
+  composer:
+    image: composer:2.2.6
+    container_name: wordpress-composer-container
+    volumes:
+      - ./src:/var/www/html
+    working_dir: /var/www/html
+    depends_on:
+      - php
+    networks:
+      - backend
+
+  wordpress:
+      depends_on:
+        - mysql
+        - postgres
+      image: wordpress:latest
+      container_name: wordpress
+      restart: unless-stopped
+      env_file:
+        - ./.env
+      environment:
+          - WORDPRESS_DB_HOST= $WORDPRESS_DB_HOST
+          - WORDPRESS_DB_USER= "${WORDPRESS_DB_USER}"
+          - WORDPRESS_DB_PASSWORD= "${WORDPRESS_DB_PASSWORD}"
+          - WORDPRESS_DB_NAME= "${WORDPRESS_DB_NAME}"
+          - WORDPRESS_TABLE_PREFIX= "${WORDPRESS_TABLE_PREFIX}"
+          - WORDPRESS_CONFIG_EXTRA= define('WORDPRESS_DB_NAME','http://dev.insurance.kothay.com/');
+
+      volumes:
+        - ./src:/var/www/html
+      networks:
+        - backend
+
+ 
