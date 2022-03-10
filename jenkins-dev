@@ -8,6 +8,7 @@ pipeline {
 		       echo 'build test and deploy wordpress cms completed';
                        sh '''#!/bin/bash
 		    	 sudo docker-compose build
+			 sudo cp ./wp-config.php ./src/wp-config.php
                        '''
                    }
             	}
