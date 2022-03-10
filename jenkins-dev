@@ -5,9 +5,9 @@ pipeline {
         	parallel {
                   stage('wordpress cms') {
                     steps {
-		       echo 'build test and deploy wordpress cms completed';
+		       echo 'build test and deploy wordpress cms started
                        sh '''#!/bin/bash
-		    	 sudo docker-compose build
+		    	 sudo docker-compose up -d --build
 			 sudo cp ./wp-config.php ./src/wp-config.php
                        '''
                    }
