@@ -2,7 +2,7 @@ version: '3'
 
 volumes:
   wordpress-pgdata:
-  mysql:
+  wordpress-mariadb:
 networks:
   backend:
 
@@ -28,7 +28,7 @@ services:
         restart: unless-stopped
         tty: true
         volumes:
-          - ./mariadb:/var/lib/mysql
+          - wordpress-mariadb:/var/lib/mysql
         ports:
           - "3306:3306"
         env_file: .env
